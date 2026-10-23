@@ -86,9 +86,6 @@
     <!-- BBS 论坛页面 -->
     <string name="bbs_title">BBS 论坛</string>
     <string name="bbs_url">https://www.free-bbs.cn/</string>
-    <string name="bbs_menu_refresh">刷新</string>
-    <string name="bbs_menu_browser">在浏览器打开</string>
     <string name="bbs_page_error">页面未能加载，请检查网络后重试</string>
     <string name="bbs_link_unsupported">没有应用可以打开此链接</string>
-    <string name="mine_bbs">BBS 论坛</string>
 </resources>

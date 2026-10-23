@@ -37,12 +37,6 @@
             android:exported="false"
             android:parentActivityName=".MainActivity" />
 
-        <activity
-            android:name=".ui.BbsActivity"
-            android:exported="false"
-            android:configChanges="orientation|screenSize"
-            android:parentActivityName=".MainActivity" />
-
         <!-- M5-1 今日课程小组件 -->
         <receiver
             android:name=".widget.TodayCourseWidgetProvider"

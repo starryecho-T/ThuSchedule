@@ -16,6 +16,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
 import com.thuschedule.app.reminder.ReminderReceiver
+import com.thuschedule.app.ui.BbsFragment
 import com.thuschedule.app.ui.MainViewModel
 import com.thuschedule.app.ui.MineFragment
 import com.thuschedule.app.ui.OverviewFragment
@@ -29,7 +30,13 @@ class MainActivity : AppCompatActivity() {
     private var selectedTab = R.id.tab_schedule
     private lateinit var navigation: BottomNavigationView
     private val back = object : OnBackPressedCallback(false) {
-        override fun handleOnBackPressed() { navigation.selectedItemId = R.id.tab_schedule }
+        override fun handleOnBackPressed() {
+            if (selectedTab == R.id.tab_bbs) {
+                val bbs = supportFragmentManager.findFragmentByTag("tab_$selectedTab") as? BbsFragment
+                if (bbs?.handleBack() == true) return
+            }
+            navigation.selectedItemId = R.id.tab_schedule
+        }
     }
     private val permission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         Toast.makeText(this, if (granted) R.string.reminder_granted else R.string.reminder_denied, Toast.LENGTH_SHORT).show()
@@ -51,7 +58,7 @@ class MainActivity : AppCompatActivity() {
         navigation = findViewById(R.id.bottom_navigation)
         onBackPressedDispatcher.addCallback(this, back)
         selectedTab = savedInstanceState?.getInt("tab", R.id.tab_schedule) ?: R.id.tab_schedule
-        if (selectedTab !in listOf(R.id.tab_schedule, R.id.tab_overview, R.id.tab_mine)) selectedTab = R.id.tab_schedule
+        if (selectedTab !in listOf(R.id.tab_schedule, R.id.tab_overview, R.id.tab_bbs, R.id.tab_mine)) selectedTab = R.id.tab_schedule
         navigation.selectedItemId = selectedTab
         selectTab(selectedTab)
         navigation.setOnItemSelectedListener { selectTab(it.itemId) }
@@ -71,6 +78,7 @@ class MainActivity : AppCompatActivity() {
         val tag = "tab_$id"
         val target = supportFragmentManager.findFragmentByTag(tag) ?: when (id) {
             R.id.tab_overview -> OverviewFragment()
+            R.id.tab_bbs -> BbsFragment()
             R.id.tab_mine -> MineFragment()
             else -> ScheduleFragment()
         }
