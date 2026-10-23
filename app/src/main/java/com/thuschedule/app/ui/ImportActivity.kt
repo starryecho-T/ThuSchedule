@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.net.http.SslError
 import android.os.Bundle
+import android.os.Message
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
@@ -13,6 +14,7 @@ import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.webkit.CookieManager
+import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
@@ -80,6 +82,7 @@ class ImportActivity : AppCompatActivity() {
     private var verifying = false
     private var capturedUrl: String? = null
     private var previewDialog: AlertDialog? = null
+    private var newWindowWebView: WebView? = null
     private val captureScript by lazy {
         assets.open("import/capture_schedule.js").bufferedReader().use { it.readText() }
     }
@@ -136,10 +139,40 @@ class ImportActivity : AppCompatActivity() {
             allowFileAccess = false
             allowContentAccess = false
             userAgentString = DESKTOP_UA
+            // INFO 门户的服务入口（含课表）均为 target="_blank" 新窗口打开，
+            // 关闭多窗口支持时这些点击会被静默忽略，必须在 onCreateWindow 里接管。
+            setSupportMultipleWindows(true)
         }
         CookieManager.getInstance().apply {
             setAcceptCookie(true)
             setAcceptThirdPartyCookies(webView, true)
+        }
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onCreateWindow(
+                view: WebView?, isDialog: Boolean, isUserGesture: Boolean, resultMsg: Message?,
+            ): Boolean {
+                if (view == null || resultMsg == null || applying || verifying || exporting) return false
+                newWindowWebView?.destroy()
+                // 借一个临时 WebView 接住新窗口请求，首个导航转发回主 WebView 加载。
+                val transient = WebView(view.context)
+                newWindowWebView = transient
+                transient.webViewClient = object : WebViewClient() {
+                    override fun shouldOverrideUrlLoading(v: WebView, request: WebResourceRequest): Boolean {
+                        val url = request.url.toString()
+                        if (runCatching { ImportUrlPolicy.normalize(url) }.isSuccess) {
+                            view.loadUrl(url)
+                        } else {
+                            statusText.setText(R.string.import_link_blocked)
+                        }
+                        v.post { v.destroy() }
+                        return true
+                    }
+                }
+                val transport = resultMsg.obj as WebView.WebViewTransport
+                transport.webView = transient
+                resultMsg.sendToTarget()
+                return true
+            }
         }
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
@@ -513,6 +546,8 @@ class ImportActivity : AppCompatActivity() {
         captureGeneration++
         captureJob?.cancel()
         loadTimeout?.cancel()
+        newWindowWebView?.destroy()
+        newWindowWebView = null
         (webView.parent as? ViewGroup)?.removeView(webView)
         webView.stopLoading()
         webView.destroy()
