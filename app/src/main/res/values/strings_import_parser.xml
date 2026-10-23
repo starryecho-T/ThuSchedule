@@ -7,7 +7,7 @@
     <string name="import_no_table">未发现有明确课程名、星期、节次和周次的课表列表</string>
     <string name="import_snapshot_unavailable">本次快照保存失败，可重新识别后重试</string>
     <string name="import_replace_choice">替换现有全部课程（默认保留已有课程）</string>
-    <string name="import_review_notice">默认追加课程并跳过完全重复的安排。请确认课程属于当前学期。当前支持第 1—18 周、第 1—14 节；清华教学日历不含教师姓名，导入后可在课程编辑中补充。</string>
+    <string name="import_review_notice">默认追加课程并跳过完全重复的安排。请确认课程属于当前学期。当前支持第 1—18 周、第 1—14 节；清华教学日历不含教师姓名，导入后可在课程编辑中补充。教务标记「未安排时间的课程」（如尚未排课的实验）没有时间信息，无法导入；排课后重新识别即可追加。</string>
     <string name="import_verify_choice">我已核对当前学期和课程信息</string>
     <string name="import_replace_warning">替换会删除原有全部课程和隐藏设置，仅适用于已确认完整的学期课表。共导入 %1$d 条安排，确定替换吗？</string>
     <string name="import_confirm_replace">确认替换</string>
