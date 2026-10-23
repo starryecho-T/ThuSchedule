@@ -3,7 +3,7 @@ package com.thuschedule.app.ui
 import android.content.Context
 import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatDelegate
-import com.thuschedule.app.widget.TodayCourseWidgetProvider
+import com.thuschedule.app.widget.WidgetRefresher
 
 /** Persist the app's appearance independently of course backups. */
 object ThemePreferences {
@@ -24,7 +24,7 @@ object ThemePreferences {
         val app = context.applicationContext
         app.getSharedPreferences(FILE, Context.MODE_PRIVATE).edit().putInt(KEY, mode).apply()
         AppCompatDelegate.setDefaultNightMode(mode)
-        TodayCourseWidgetProvider.refreshAll(app)
+        WidgetRefresher.refreshAll(app)
     }
 
     /** RemoteViews must receive explicit colors when the app overrides the launcher theme. */

@@ -37,6 +37,12 @@
             android:exported="false"
             android:parentActivityName=".MainActivity" />
 
+        <activity
+            android:name=".ui.BbsActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize"
+            android:parentActivityName=".MainActivity" />
+
         <!-- M5-1 今日课程小组件 -->
         <receiver
             android:name=".widget.TodayCourseWidgetProvider"
@@ -48,6 +54,31 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/today_course_widget_info" />
+        </receiver>
+
+        <!-- 小组件矩阵：下节课（2x1）与周列表 -->
+        <receiver
+            android:name=".widget.NextClassWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_next_description">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/next_class_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.WeekListWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_week_description">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/week_list_widget_info" />
         </receiver>
 
         <!-- M5-2 上课提醒：精确闹钟 + 开机/更新后重算 -->

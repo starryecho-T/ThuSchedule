@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import com.thuschedule.app.widget.TodayCourseWidgetProvider
+import com.thuschedule.app.widget.WidgetRefresher
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -52,7 +52,7 @@ class ReminderReceiver : BroadcastReceiver() {
                         showNotification(app, intent.getLongExtra(EXTRA_COURSE_ID, 0L))
                     }
                     scheduleFor(app)
-                    TodayCourseWidgetProvider.refreshAll(app)
+                    WidgetRefresher.refreshAll(app)
                 }
             } finally { result.finish() }
         }

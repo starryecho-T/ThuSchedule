@@ -6,7 +6,7 @@ import android.os.Process
 import com.thuschedule.app.data.CourseRepository
 import com.thuschedule.app.data.db.AppDatabase
 import com.thuschedule.app.reminder.ReminderReceiver
-import com.thuschedule.app.widget.TodayCourseWidgetProvider
+import com.thuschedule.app.widget.WidgetRefresher
 import com.thuschedule.app.ui.ThemePreferences
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,7 +31,7 @@ class ScheduleApp : Application() {
         // M5：课程变化时刷新小组件并重算上课提醒（collectLatest 去抖：连续变更只处理最终态）。
         appScope.launch {
             repo.observeAll().collectLatest {
-                TodayCourseWidgetProvider.refreshAll(this@ScheduleApp)
+                WidgetRefresher.refreshAll(this@ScheduleApp)
                 ReminderReceiver.reschedule(this@ScheduleApp)
             }
         }
@@ -67,7 +67,7 @@ class ScheduleApp : Application() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        TodayCourseWidgetProvider.refreshAll(this)
+        WidgetRefresher.refreshAll(this)
     }
 
     companion object {
