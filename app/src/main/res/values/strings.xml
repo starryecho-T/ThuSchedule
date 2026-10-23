@@ -1,0 +1,82 @@
+<resources>
+    <string name="app_name">清华课表</string>
+    <string name="timetable_title">第 %1$d 周课表</string>
+    <string name="timetable_subtitle">2026-2027 学年秋季学期</string>
+
+    <!-- M3 周次切换 -->
+    <string name="week_label_fmt">第 %1$d 周</string>
+    <string name="week_label_current">第 %1$d 周 · 本周</string>
+    <string name="action_prev_week">‹</string>
+    <string name="action_next_week">›</string>
+    <string name="action_today">今天</string>
+
+    <!-- M2 课程编辑 -->
+    <string name="edit_course_new">添加课程</string>
+    <string name="edit_course_edit">编辑课程</string>
+    <string name="hint_course_name">课程名称</string>
+    <string name="hint_teacher">教师（可选）</string>
+    <string name="hint_room">教室（可选）</string>
+    <string name="label_day">星期</string>
+    <string name="label_period">节次</string>
+    <string name="label_week_range">周次</string>
+    <string name="label_week_mode">单双周</string>
+    <string name="label_color">颜色</string>
+    <string name="week_mode_all">每周</string>
+    <string name="week_mode_odd">单周</string>
+    <string name="week_mode_even">双周</string>
+    <string name="period_to">至</string>
+    <string name="action_save">保存</string>
+    <string name="action_delete">删除</string>
+    <string name="delete_confirm">确定删除这门课程吗？</string>
+    <string name="toast_name_empty">请填写课程名称</string>
+    <string name="toast_day_required">请选择星期</string>
+    <string name="toast_period_invalid">开始节次不能大于结束节次</string>
+    <string name="toast_week_invalid">起始周不能大于结束周</string>
+    <string name="fab_add_course">添加课程</string>
+
+    <!-- M3 课程详情弹窗 -->
+    <string name="sheet_edit">编辑</string>
+    <string name="sheet_hide_once">仅隐藏本周这一次</string>
+    <string name="sheet_hide_all">隐藏全部周次</string>
+    <string name="sheet_restore">恢复显示</string>
+    <string name="sheet_teacher_fmt">教师：%1$s</string>
+    <string name="sheet_room_fmt">地点：%1$s</string>
+    <string name="sheet_weeks_fmt">周次：%1$s</string>
+    <string name="sheet_hidden_note">已隐藏 %1$d 个周次</string>
+    <string name="sheet_empty_hint">—</string>
+
+    <!-- M4 日程概览 -->
+    <string name="overview_title">日程概览</string>
+    <string name="overview_subtitle_fmt">第 %1$d 周 · %2$d月%3$d日 周%4$s</string>
+    <string name="overview_empty">这一天没有课</string>
+    <string name="overview_time_fmt">%1$s~%2$s · 第%3$d-%4$d节</string>
+
+    <!-- M4 教务导入 -->
+    <string name="import_title">从教务导入</string>
+    <string name="import_hint">① 在下方登录校园信息门户（info.tsinghua.edu.cn）② 打开「课表」相关页面 ③ 点击「一键识别课表」（清华页面识别适配中）</string>
+    <string name="import_action_parse">抓取解析</string>
+    <string name="import_action_apply">导入课表</string>
+    <string name="import_parse_empty_page">页面尚未加载完成，请稍候重试</string>
+    <string name="import_parse_ok">已解析到 %1$d 条课程安排，请核对后点击「导入课表」</string>
+    <string name="import_parse_unsupported">暂未识别该页面结构，已保存快照：\n%1$s\n请将快照文件发回以补充解析规则</string>
+    <string name="import_snapshot_saved">页面快照已保存</string>
+    <string name="import_confirm">导入将清空现有课程并替换为解析出的 %1$d 条安排，确定继续吗？</string>
+    <string name="import_done">导入完成</string>
+
+    <!-- M5 桌面小组件与上课提醒 -->
+    <string name="widget_today_description">今日课程一览：按时间排序显示今天的课</string>
+    <string name="reminder_channel_name">上课提醒</string>
+    <string name="reminder_channel_description">上课前 20 分钟提醒</string>
+    <string name="reminder_title_prefix">即将上课</string>
+    <string name="reminder_granted">已开启上课提醒</string>
+    <string name="reminder_denied">未授予通知权限，无法提醒</string>
+
+    <!-- 应用内更新检查 -->
+    <string name="update_available_title">发现新版本 %1$s</string>
+    <string name="update_download">前往下载</string>
+    <string name="update_skip">跳过此版本</string>
+    <string name="update_later">以后再说</string>
+    <string name="update_no_new">当前已是最新版本</string>
+    <string name="update_check">检查更新</string>
+    <string name="update_check_ing">正在检查更新…</string>
+</resources>
