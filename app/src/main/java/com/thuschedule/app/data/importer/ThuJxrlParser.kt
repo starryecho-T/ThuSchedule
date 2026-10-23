@@ -3,6 +3,8 @@ package com.thuschedule.app.data.importer
 import com.thuschedule.app.data.ThuTimeTable
 import com.thuschedule.app.model.Course
 import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
 /**
@@ -19,6 +21,10 @@ import java.time.temporal.ChronoUnit
 object ThuJxrlParser {
 
     data class Result(val courses: List<Course>, val issues: List<String>)
+
+    /** 作息表的节次时间预解析；接口时间格式可能是 8:00 / 08:00 / 08:00:00。 */
+    private val periodStarts = ThuTimeTable.PERIODS.map { it.index to parseTime(it.start) }
+    private val periodEnds = ThuTimeTable.PERIODS.map { it.index to parseTime(it.end) }
 
     fun parse(records: List<*>, termStart: LocalDate, totalWeeks: Int): Result {
         val issues = mutableListOf<String>()
@@ -41,24 +47,30 @@ object ThuJxrlParser {
             if (text("fl").contains("个人")) return@forEachIndexed
             val name = text("nr")
             if (name.isEmpty()) { reject("缺少课程名"); return@forEachIndexed }
-            val date = runCatching { LocalDate.parse(text("nq")) }.getOrElse {
+            val date = parseDate(text("nq")) ?: run {
                 reject("日期「${text("nq")}」无法识别"); return@forEachIndexed
             }
             val week = Math.floorDiv(ChronoUnit.DAYS.between(termStart, date), 7L).toInt() + 1
             if (week !in 1..totalWeeks) {
                 reject("日期 $date 不在本学期（第1-${totalWeeks}周）内"); return@forEachIndexed
             }
-            val start = ThuTimeTable.PERIODS.firstOrNull { it.start == normalizeTime(text("kssj")) }
-            val end = ThuTimeTable.PERIODS.firstOrNull { it.end == normalizeTime(text("jssj")) }
-            if (start == null || end == null || start.index > end.index) {
+            val startTime = parseTime(text("kssj")) ?: run {
+                reject("上课时间「${text("kssj")}」无法识别"); return@forEachIndexed
+            }
+            val endTime = parseTime(text("jssj")) ?: run {
+                reject("下课时间「${text("jssj")}」无法识别"); return@forEachIndexed
+            }
+            val start = periodStarts.firstOrNull { it.second == startTime }?.first
+            val end = periodEnds.firstOrNull { it.second == endTime }?.first
+            if (start == null || end == null || start > end) {
                 reject("上课时间 ${text("kssj")}-${text("jssj")} 与作息表不匹配")
                 return@forEachIndexed
             }
             val day = date.dayOfWeek.value
             val room = text("dd")
-            val key = listOf(name, room, day, start.index, end.index).joinToString("\u0000")
+            val key = listOf(name, room, day, start, end).joinToString("\u0000")
             val slot = slots.getOrPut(key) {
-                Slot(name, room, day, start.index, end.index, slots.size, mutableSetOf())
+                Slot(name, room, day, start, end, slots.size, mutableSetOf())
             }
             slot.weeks.add(week)
         }
@@ -77,5 +89,27 @@ object ThuJxrlParser {
         return Result(courses, emptyList())
     }
 
-    private fun normalizeTime(value: String): String = value.replace("：", ":").trim()
+    /** 兼容 2026-09-14、2026/9/14、2026.9.14、20260914 等写法（thu-info 用 dayjs 宽容解析）。 */
+    internal fun parseDate(raw: String): LocalDate? {
+        val parts = raw.trim().replace('.', '-').replace('/', '-').split('-')
+        if (parts.size == 3) {
+            val numbers = parts.map { it.toIntOrNull() ?: return null }
+            val (year, month, day) = numbers
+            if (year !in 2000..2100) return null
+            return runCatching { LocalDate.of(year, month, day) }.getOrNull()
+        }
+        val compact = parts.singleOrNull() ?: return null
+        if (compact.length != 8 || compact.any { !it.isDigit() }) return null
+        return runCatching {
+            LocalDate.of(compact.substring(0, 4).toInt(), compact.substring(4, 6).toInt(), compact.substring(6, 8).toInt())
+        }.getOrNull()
+    }
+
+    /** 兼容全角冒号与可省略的前导零（8:00 与 08:00 等价）。 */
+    internal fun parseTime(raw: String): LocalTime? {
+        val value = raw.replace("：", ":").trim()
+        return runCatching { LocalTime.parse(value) }.getOrElse {
+            runCatching { LocalTime.parse(value, DateTimeFormatter.ofPattern("H:mm")) }.getOrNull()
+        }
+    }
 }

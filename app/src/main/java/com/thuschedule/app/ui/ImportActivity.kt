@@ -393,10 +393,18 @@ class ImportActivity : AppCompatActivity() {
             try {
                 val state = fetchThuJxrl()
                 if (generation != captureGeneration) return@launch
-                val error = state?.optString("error").orEmpty().ifBlank { null }
-                val records = state?.optJSONArray("records")?.let { array ->
-                    (0 until array.length()).map { array.opt(it) }
+                // 调试转储：无论成败都留档，便于离线分析接口数据格式。
+                runCatching {
+                    withContext(Dispatchers.IO) {
+                        val dir = File(applicationContext.cacheDir, "import").apply { mkdirs() }
+                        File(dir, "thu_debug.json").writeText(state?.toString() ?: "null")
+                    }
                 }
+                Log.d(TAG, "THU fetch done: error=${state?.optString("error")}, records=${state?.optJSONArray("records")?.length()}")
+                // org.json 的 optString 会把 JSON null 变成字符串 "null"，需归一化。
+                val rawError = state?.optString("error").orEmpty()
+                val error = rawError.takeIf { it.isNotBlank() && it != "null" }
+                val records = state?.optJSONArray("records")?.toRecordMaps()
                 if (error != null || records == null) {
                     statusText.text = getString(R.string.import_thu_failed, error ?: "超时")
                     return@launch
@@ -425,6 +433,13 @@ class ImportActivity : AppCompatActivity() {
             }
         }
     }
+
+    /** org.json.JSONArray → Map 列表（ThuJxrlParser 按字符串键值消费）。 */
+    private fun org.json.JSONArray.toRecordMaps(): List<Map<String, String>> =
+        (0 until length()).mapNotNull { index ->
+            val obj = optJSONObject(index) ?: return@mapNotNull null
+            obj.keys().asSequence().associateWith { key -> obj.optString(key) }
+        }
 
     /** 注入 JSONP 抓取脚本并轮询结果；整体超时返回 null。 */
     private suspend fun fetchThuJxrl(): JSONObject? {
@@ -531,9 +546,7 @@ class ImportActivity : AppCompatActivity() {
             try {
                 if (thuMode) {
                     val state = fetchThuJxrl()
-                    val records = state?.optJSONArray("records")?.let { array ->
-                        (0 until array.length()).map { array.opt(it) }
-                    }
+                    val records = state?.optJSONArray("records")?.toRecordMaps()
                     val result = records?.let { list ->
                         withContext(Dispatchers.Default) {
                             runCatching {

@@ -20,6 +20,6 @@
     <string name="import_pending">正在核对或保存，请稍候…</string>
     <string name="import_timeout">页面识别超时，请等页面加载完成后重试</string>
     <string name="import_thu_fetching">正在从教学日历读取整学期课程（约需数秒）…</string>
-    <string name="import_thu_failed">教学日历读取失败：%1$s\n请刷新页面并确认已登录 INFO 门户后重试。</string>
+    <string name="import_thu_failed">教学日历读取失败：%1$s\n请确认已登录门户并打开过「课表」页面（建立教务会话），停留在课表页面后重试。</string>
     <string name="import_thu_source">INFO 教学日历</string>
 </resources>

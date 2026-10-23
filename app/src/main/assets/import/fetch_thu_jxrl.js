@@ -6,7 +6,10 @@
     var TOTAL_WEEKS = parseInt('__TOTAL_WEEKS__', 10);
     var GROUP = 3;          // 每批周数，与社区实现的分批口径一致
     var TIMEOUT_MS = 10000; // 单批超时
-    var BASE = 'https://info.tsinghua.edu.cn/jxmh_out.do?m=bks_jxrl_all&p_start_date=';
+    // 教学日历接口在教务系统域下（thu-info 的 webvpn 地址解码验证）；
+    // 协议跟随当前页面，避免混合内容拦截。
+    var BASE = (location.protocol === 'https:' ? 'https://' : 'http://') +
+        'zhjw.cic.tsinghua.edu.cn/jxmh_out.do?m=bks_jxrl_all&p_start_date=';
 
     var state = { done: false, records: [], error: null };
     try { window.__thuJxrlState = state; } catch (ignored) { return; }
@@ -35,11 +38,8 @@
             }
             window[name] = function (data) {
                 cleanup();
-                if (Object.prototype.toString.call(data) !== '[object Array]') {
-                    reject(new Error('payload'));
-                    return;
-                }
-                resolve(data);
+                // 接口在无数据/会话异常时可能返回 m(null)，视为空数据交给上层提示。
+                resolve(Object.prototype.toString.call(data) === '[object Array]' ? data : []);
             };
             script.onerror = function () { cleanup(); reject(new Error('network')); };
             script.src = BASE + fmt(start) + '&p_end_date=' + fmt(end) + '&jsoncallback=' + name;

@@ -75,11 +75,20 @@ class ThuJxrlParserTest {
         assertEquals(1, result.courses.first { it.name == "大学物理B(1)" }.colorIndex)
     }
 
+    @Test fun acceptsAlternateDateAndTimeFormats() {
+        val result = ThuJxrlParser.parse(listOf(
+            record("2026/9/14", "微积分A(1)", kssj = "8:00", jssj = "9:35"),
+            record("20260915", "数据与算法", kssj = "08:00:00", jssj = "09:35:00"),
+        ), termStart, totalWeeks)
+        assertEquals(2, result.courses.size)
+        assertTrue(result.issues.isEmpty())
+    }
+
     @Test fun rejectsWholeBatchOnAnyInvalidRecord() {
         for (bad in listOf(
             record("2026-09-14", "  "),                                  // 空课程名
-            record("2026/09/14", "微积分A(1)"),                           // 日期格式
-            record("2027-02-01", "微积分A(1)"),                           // 学期外
+            record("2026-13-01", "微积分A(1)"),                           // 日期非法
+            record("20270201", "微积分A(1)"),                             // 学期外
             record("2026-09-14", "微积分A(1)", kssj = "08:10", jssj = "09:35"), // 时间不在作息表
             record("2026-09-14", "微积分A(1)", kssj = "09:35", jssj = "08:00"), // 起止倒置
             mapOf("nr" to "微积分A(1)"),                                  // 缺字段
