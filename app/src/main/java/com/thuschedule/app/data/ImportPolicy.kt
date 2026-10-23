@@ -10,14 +10,14 @@ internal object ImportPolicy {
             val location = "第${index + 1}条课程安排"
             require(course.name.trim().isNotEmpty()) { "${location}缺少课程名称" }
             require(course.dayOfWeek in 1..7) { "${location}的星期必须为1至7" }
-            require(course.startPeriod in 1..12 &&
-                course.endPeriod in course.startPeriod..12) {
-                "${location}的节次必须为1至12内的连续范围"
+            require(course.startPeriod in 1..ThuTimeTable.PERIODS.size &&
+                course.endPeriod in course.startPeriod..ThuTimeTable.PERIODS.size) {
+                "${location}的节次必须为1至${ThuTimeTable.PERIODS.size}内的连续范围"
             }
             val weekTokens = course.weeksCsv.split(",")
             val weeks = weekTokens.map { it.trim().toIntOrNull() }
-            require(weeks.isNotEmpty() && weeks.all { it != null && it in 1..17 }) {
-                "${location}的周次不能为空且必须为1至17"
+            require(weeks.isNotEmpty() && weeks.all { it != null && it in 1..ThuTimeTable.TOTAL_WEEKS }) {
+                "${location}的周次不能为空且必须为1至${ThuTimeTable.TOTAL_WEEKS}"
             }
             require(course.colorIndex >= 0) { "${location}的颜色索引无效" }
             course.copy(

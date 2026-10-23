@@ -124,7 +124,7 @@ class CourseDaoPolicyTest {
             val existing = course(1, "原课程")
             val dao = InMemoryDao(listOf(existing))
             val incoming = listOf(course(0, "有效课程"),
-                course(0, "无效课程").copy(weeksCsv = "18"))
+                course(0, "无效课程").copy(weeksCsv = "19"))
 
             try {
                 dao.importCourses(incoming, replaceExisting)

@@ -34,9 +34,11 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowCompat
 import com.thuschedule.app.R
 import com.thuschedule.app.data.CourseRepository
+import com.thuschedule.app.data.TermCalendar
 import com.thuschedule.app.data.db.AppDatabase
 import com.thuschedule.app.data.importer.JluScheduleParser
 import com.thuschedule.app.data.importer.ImportUrlPolicy
+import com.thuschedule.app.data.importer.ThuJxrlParser
 import com.thuschedule.app.model.Course
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
@@ -50,6 +52,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.delay
+import org.json.JSONObject
 import org.json.JSONTokener
 import java.io.File
 import java.io.IOException
@@ -84,6 +87,15 @@ class ImportActivity : AppCompatActivity() {
     private var capturedUrl: String? = null
     private var previewDialog: AlertDialog? = null
     private var newWindowWebView: WebView? = null
+    private var thuMode = false
+    private val thuFetchTemplate by lazy {
+        assets.open("import/fetch_thu_jxrl.js").bufferedReader().use { it.readText() }
+    }
+    private val thuFetchScript by lazy {
+        thuFetchTemplate
+            .replace("__FIRST_DAY__", TermCalendar.TERM_START.toString())
+            .replace("__TOTAL_WEEKS__", TermCalendar.TOTAL_WEEKS.toString())
+    }
     private val captureScript by lazy {
         assets.open("import/capture_schedule.js").bufferedReader().use { it.readText() }
     }
@@ -317,6 +329,7 @@ class ImportActivity : AppCompatActivity() {
         previewDialog?.dismiss()
         previewDialog = null
         snapshot = null
+        thuMode = false
         importButton.isEnabled = false
         snapshotButton.isEnabled = false
         parseButton.isEnabled = false
@@ -326,6 +339,10 @@ class ImportActivity : AppCompatActivity() {
         if (!canCapture()) return
         invalidateCapture()
         val generation = captureGeneration
+        if (isTsinghuaPage()) {
+            captureThuJxrl(generation)
+            return
+        }
         statusText.setText(R.string.import_capturing)
         captureJob = lifecycleScope.launch {
             try {
@@ -367,8 +384,70 @@ class ImportActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun readCapture(): JluScheduleParser.Capture {
-        val payload = withTimeout(15_000) {
+    /** INFO / 教务页面：不解析网格，直接走教学日历接口一次取回整学期课程。 */
+    private fun isTsinghuaPage() = webView.url?.contains("tsinghua.edu.cn") == true
+
+    private fun captureThuJxrl(generation: Int) {
+        statusText.setText(R.string.import_thu_fetching)
+        captureJob = lifecycleScope.launch {
+            try {
+                val state = fetchThuJxrl()
+                if (generation != captureGeneration) return@launch
+                val error = state?.optString("error").orEmpty().ifBlank { null }
+                val records = state?.optJSONArray("records")?.let { array ->
+                    (0 until array.length()).map { array.opt(it) }
+                }
+                if (error != null || records == null) {
+                    statusText.text = getString(R.string.import_thu_failed, error ?: "超时")
+                    return@launch
+                }
+                val result = withContext(Dispatchers.Default) {
+                    ThuJxrlParser.parse(records, TermCalendar.TERM_START, TermCalendar.TOTAL_WEEKS)
+                }
+                if (generation != captureGeneration) return@launch
+                if (result.issues.isNotEmpty()) {
+                    statusText.text = getString(R.string.import_diagnostics,
+                        result.issues.take(3).joinToString("\n") { it.take(120) })
+                } else {
+                    parsedCourses = result.courses
+                    capturedUrl = THU_SOURCE
+                    thuMode = true
+                    statusText.text = getString(R.string.import_recognized, parsedCourses.size)
+                    importButton.isEnabled = true
+                    confirmImport()
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                if (generation == captureGeneration) statusText.setText(R.string.import_capture_failed)
+            } finally {
+                if (generation == captureGeneration) parseButton.isEnabled = canCapture()
+            }
+        }
+    }
+
+    /** 注入 JSONP 抓取脚本并轮询结果；整体超时返回 null。 */
+    private suspend fun fetchThuJxrl(): JSONObject? {
+        webView.evaluateJavascript(thuFetchScript, null)
+        val deadline = System.currentTimeMillis() + FETCH_TOTAL_TIMEOUT_MS
+        while (System.currentTimeMillis() < deadline) {
+            delay(600)
+            val state = suspendCancellableCoroutine<JSONObject?> { continuation ->
+                webView.evaluateJavascript("JSON.stringify(window.__thuJxrlState||null)") { value ->
+                    if (!continuation.isActive) return@evaluateJavascript
+                    val decoded = runCatching {
+                        val outer = JSONTokener(value).nextValue() as? String
+                        outer?.let { JSONTokener(it).nextValue() as? JSONObject }
+                    }.getOrNull()
+                    continuation.resume(decoded)
+                }
+            } ?: continue
+            if (state.optBoolean("done", false)) return state
+        }
+        return null
+    }
+
+    private suspend fun readCapture(): JluScheduleParser.Capture {        val payload = withTimeout(15_000) {
             suspendCancellableCoroutine<String> { continuation ->
                 webView.evaluateJavascript(captureScript) { value ->
                     if (!continuation.isActive) return@evaluateJavascript
@@ -450,6 +529,26 @@ class ImportActivity : AppCompatActivity() {
         statusText.setText(R.string.import_verifying)
         lifecycleScope.launch {
             try {
+                if (thuMode) {
+                    val state = fetchThuJxrl()
+                    val records = state?.optJSONArray("records")?.let { array ->
+                        (0 until array.length()).map { array.opt(it) }
+                    }
+                    val result = records?.let { list ->
+                        withContext(Dispatchers.Default) {
+                            runCatching {
+                                ThuJxrlParser.parse(list, TermCalendar.TERM_START, TermCalendar.TOTAL_WEEKS)
+                            }.getOrNull()
+                        }
+                    }
+                    if (generation != captureGeneration || result?.courses != courses) {
+                        invalidateCapture()
+                        statusText.setText(R.string.import_changed)
+                        return@launch
+                    }
+                    applyCourses(courses, replace)
+                    return@launch
+                }
                 val current = readCapture()
                 val result = withContext(Dispatchers.Default) { JluScheduleParser.parse(current) }
                 if (generation != captureGeneration || sourceUrl != current.sourceUrl ||
@@ -560,6 +659,8 @@ class ImportActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "ImportActivity"
+        private const val THU_SOURCE = "https://info.tsinghua.edu.cn/jxmh_out.do"
+        private const val FETCH_TOTAL_TIMEOUT_MS = 80_000L
         private const val STATE_URL = "import_current_url"
         private const val STATE_EXPORT_SOURCE = "export_snapshot_path"
         private const val DESKTOP_UA =

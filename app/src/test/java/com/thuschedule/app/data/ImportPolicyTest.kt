@@ -81,8 +81,8 @@ class ImportPolicyTest {
     fun acceptsScheduleBoundsAndOptionalTeacherAndRoom() {
         val first = course().copy(dayOfWeek = 1, startPeriod = 1, endPeriod = 1,
             weeksCsv = "1", teacher = "", room = "")
-        val last = course().copy(dayOfWeek = 7, startPeriod = 12, endPeriod = 12,
-            weeksCsv = "17")
+        val last = course().copy(dayOfWeek = 7, startPeriod = 14, endPeriod = 14,
+            weeksCsv = "18")
         assertEquals(2, ImportPolicy.prepare(listOf(first, last)).size)
     }
 
@@ -99,14 +99,14 @@ class ImportPolicyTest {
 
     @Test
     fun rejectsInvalidPeriodRanges() {
-        for ((start, end) in listOf(0 to 2, 1 to 13, 13 to 13, 3 to 2, 1 to 0)) {
+        for ((start, end) in listOf(0 to 2, 1 to 15, 15 to 15, 3 to 2, 1 to 0)) {
             expectInvalid(listOf(course().copy(startPeriod = start, endPeriod = end)))
         }
     }
 
     @Test
     fun rejectsEmptyMalformedAndOutOfRangeWeeks() {
-        for (weeks in listOf("", " ", "0", "18", "1,,2", "1,x", "1,")) {
+        for (weeks in listOf("", " ", "0", "19", "1,,2", "1,x", "1,")) {
             expectInvalid(listOf(course().copy(weeksCsv = weeks)))
         }
     }
