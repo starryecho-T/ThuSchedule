@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  仅对清华本科教务系统放行明文 HTTP：该系统不提供 HTTPS 入口，
+  门户课表卡片以 http://zhjw.cic.tsinghua.edu.cn 单点登录跳转。
+  其余域名维持平台默认（禁止明文）。
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">zhjw.cic.tsinghua.edu.cn</domain>
+    </domain-config>
+</network-security-config>

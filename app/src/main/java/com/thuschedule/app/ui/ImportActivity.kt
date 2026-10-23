@@ -6,6 +6,7 @@ import android.net.Uri
 import android.net.http.SslError
 import android.os.Bundle
 import android.os.Message
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
@@ -160,8 +161,10 @@ class ImportActivity : AppCompatActivity() {
                     override fun shouldOverrideUrlLoading(v: WebView, request: WebResourceRequest): Boolean {
                         val url = request.url.toString()
                         if (runCatching { ImportUrlPolicy.normalize(url) }.isSuccess) {
+                            Log.d(TAG, "New-window navigation accepted: $url")
                             view.loadUrl(url)
                         } else {
+                            Log.d(TAG, "New-window navigation blocked: $url")
                             statusText.setText(R.string.import_link_blocked)
                         }
                         v.post { v.destroy() }
@@ -179,6 +182,7 @@ class ImportActivity : AppCompatActivity() {
                 if (request == null) return false
                 if (applying || verifying) return true
                 if (runCatching { ImportUrlPolicy.normalize(request.url.toString()) }.isSuccess) return false
+                Log.d(TAG, "Main-frame navigation blocked: ${request.url}")
                 if (request.isForMainFrame) statusText.setText(R.string.import_link_blocked)
                 return true
             }
@@ -555,6 +559,7 @@ class ImportActivity : AppCompatActivity() {
     }
 
     companion object {
+        private const val TAG = "ImportActivity"
         private const val STATE_URL = "import_current_url"
         private const val STATE_EXPORT_SOURCE = "export_snapshot_path"
         private const val DESKTOP_UA =
