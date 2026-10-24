@@ -13,6 +13,7 @@ import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
+import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.ProgressBar
@@ -44,6 +45,9 @@ class SiteFragment : Fragment(R.layout.fragment_site), WebBackSupport {
             allowFileAccess = false
             allowContentAccess = false
             setSupportMultipleWindows(true)
+            // 站点内容要跟随线上编辑器的更新；GitHub Pages 有 10 分钟缓存头，
+            // 这里每次进入都取最新（页面极小，开销可忽略）。
+            cacheMode = WebSettings.LOAD_NO_CACHE
         }
         CookieManager.getInstance().setAcceptCookie(true)
         web.webChromeClient = object : WebChromeClient() {
