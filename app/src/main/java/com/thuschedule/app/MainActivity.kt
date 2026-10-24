@@ -21,6 +21,8 @@ import com.thuschedule.app.ui.MainViewModel
 import com.thuschedule.app.ui.MineFragment
 import com.thuschedule.app.ui.OverviewFragment
 import com.thuschedule.app.ui.ScheduleFragment
+import com.thuschedule.app.ui.SiteFragment
+import com.thuschedule.app.ui.WebBackSupport
 import com.thuschedule.app.update.UpdateCheckLauncher
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
@@ -31,10 +33,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var navigation: BottomNavigationView
     private val back = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() {
-            if (selectedTab == R.id.tab_bbs) {
-                val bbs = supportFragmentManager.findFragmentByTag("tab_$selectedTab") as? BbsFragment
-                if (bbs?.handleBack() == true) return
-            }
+            val fragment = supportFragmentManager.findFragmentByTag("tab_$selectedTab")
+            if ((fragment as? WebBackSupport)?.handleBack() == true) return
             navigation.selectedItemId = R.id.tab_schedule
         }
     }
@@ -58,7 +58,7 @@ class MainActivity : AppCompatActivity() {
         navigation = findViewById(R.id.bottom_navigation)
         onBackPressedDispatcher.addCallback(this, back)
         selectedTab = savedInstanceState?.getInt("tab", R.id.tab_schedule) ?: R.id.tab_schedule
-        if (selectedTab !in listOf(R.id.tab_schedule, R.id.tab_overview, R.id.tab_bbs, R.id.tab_mine)) selectedTab = R.id.tab_schedule
+        if (selectedTab !in listOf(R.id.tab_schedule, R.id.tab_overview, R.id.tab_bbs, R.id.tab_site, R.id.tab_mine)) selectedTab = R.id.tab_schedule
         navigation.selectedItemId = selectedTab
         selectTab(selectedTab)
         navigation.setOnItemSelectedListener { selectTab(it.itemId) }
@@ -79,6 +79,7 @@ class MainActivity : AppCompatActivity() {
         val target = supportFragmentManager.findFragmentByTag(tag) ?: when (id) {
             R.id.tab_overview -> OverviewFragment()
             R.id.tab_bbs -> BbsFragment()
+            R.id.tab_site -> SiteFragment()
             R.id.tab_mine -> MineFragment()
             else -> ScheduleFragment()
         }

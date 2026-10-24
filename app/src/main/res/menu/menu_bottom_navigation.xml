@@ -3,5 +3,6 @@
     <item android:id="@+id/tab_schedule" android:title="@string/tab_schedule" android:icon="@drawable/ic_calendar" />
     <item android:id="@+id/tab_overview" android:title="@string/tab_overview" android:icon="@drawable/ic_agenda" />
     <item android:id="@+id/tab_bbs" android:title="@string/tab_bbs" android:icon="@drawable/ic_bbs" />
+    <item android:id="@+id/tab_site" android:title="@string/tab_site" android:icon="@drawable/ic_site" />
     <item android:id="@+id/tab_mine" android:title="@string/tab_mine" android:icon="@drawable/ic_person" />
 </menu>

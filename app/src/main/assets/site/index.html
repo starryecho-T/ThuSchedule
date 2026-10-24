@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<!--
+  个人网站（自包含单页）：同时作为清华课表 App 的「主页」Tab 内容。
+  离线可用；把本文件上传到 GitHub Pages 等静态托管即可作为正式网站发布。
+  修改内容：搜索「EDIT」注释标记，改名、简介、项目、链接都在对应位置。
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="starryecho 的个人主页">
+<title>starryecho · 个人主页</title>
+<style>
+  :root {
+    --brand: #6750a4;
+    --brand-soft: #ece6f7;
+    --bg: #faf8fd;
+    --card: #ffffff;
+    --text: #1d1b20;
+    --muted: #5b5763;
+    --line: #e6e1ef;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --brand: #cfbcff;
+      --brand-soft: #2b2540;
+      --bg: #141218;
+      --card: #211f26;
+      --text: #e6e1e9;
+      --muted: #a9a3b2;
+      --line: #36343d;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: "HarmonyOS Sans SC", "MiSans", -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.7;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px 48px; }
+
+  /* ---- 顶部 ---- */
+  header {
+    text-align: center; padding: 64px 16px 40px;
+    background: linear-gradient(180deg, var(--brand-soft) 0%, var(--bg) 100%);
+  }
+  .avatar {
+    width: 96px; height: 96px; border-radius: 50%;
+    background: var(--brand); color: var(--bg);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 40px; font-weight: 700; letter-spacing: 1px;
+    box-shadow: 0 6px 24px rgba(103, 80, 164, .28);
+  }
+  h1 { font-size: 30px; margin-top: 18px; letter-spacing: .5px; }
+  .tagline { color: var(--muted); margin-top: 6px; font-size: 15px; }
+  .tagline b { color: var(--brand); font-weight: 600; }
+
+  /* ---- 通用区块 ---- */
+  section { margin-top: 36px; }
+  h2 {
+    font-size: 18px; margin-bottom: 14px; display: flex; align-items: center; gap: 10px;
+  }
+  h2::before { content: ""; width: 4px; height: 18px; border-radius: 2px; background: var(--brand); }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+    padding: 18px 20px; transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.08); }
+  .card + .card { margin-top: 12px; }
+  .card h3 { font-size: 16px; }
+  .card p { color: var(--muted); font-size: 14px; margin-top: 6px; }
+  .card .meta { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .pill {
+    font-size: 12px; color: var(--brand); background: var(--brand-soft);
+    padding: 2px 10px; border-radius: 999px;
+  }
+  .card a { color: var(--brand); text-decoration: none; font-size: 13px; }
+  .card a:hover { text-decoration: underline; }
+
+  /* ---- 技能 ---- */
+  .skills { display: flex; flex-wrap: wrap; gap: 10px; }
+  .skills .pill { font-size: 14px; padding: 6px 16px; }
+
+  /* ---- 联系 ---- */
+  .links { display: flex; flex-wrap: wrap; gap: 12px; }
+  .links a {
+    display: inline-flex; align-items: center; gap: 8px;
+    border: 1px solid var(--line); border-radius: 12px; padding: 10px 18px;
+    color: var(--text); text-decoration: none; font-size: 14px; background: var(--card);
+  }
+  .links a:hover { border-color: var(--brand); color: var(--brand); }
+
+  footer {
+    text-align: center; color: var(--muted); font-size: 12px;
+    margin-top: 56px; border-top: 1px solid var(--line); padding-top: 24px;
+  }
+  footer a { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="avatar">S</div>
+  <!-- EDIT：改成你的名字 / 昵称 -->
+  <h1>starryecho</h1>
+  <!-- EDIT：一句话介绍自己 -->
+  <p class="tagline">清华大学 · 工科新生 · <b>Android 开发爱好者</b></p>
+</header>
+
+<div class="wrap">
+
+  <section>
+    <h2>关于我</h2>
+    <!-- EDIT：自我介绍，随意增删段落 -->
+    <div class="card">
+      <p>你好，我是 starryecho。喜欢把课程生活里的小麻烦做成小工具：现在是清华的一名工科新生，业余时间写 Android 应用、折腾硬件和网页。</p>
+      <p>相信「工具应当简单、可靠、尊重用户」——所以写的应用都尽量本地运行、无广告、不催你登录。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>项目</h2>
+    <!-- EDIT：增删你的项目卡片 -->
+    <div class="card">
+      <h3>ThuSchedule · 清华课表</h3>
+      <p>面向清华的 Android 课表应用：周视图、日程概览、桌面小组件矩阵、上课提醒，支持从 INFO 门户 / 教务系统一键导入课表。本地运行，无广告。</p>
+      <div class="meta"><span class="pill">Kotlin</span><span class="pill">Room</span><span class="pill">WebView</span><a href="https://github.com/starryecho-T/ThuSchedule" target="_blank" rel="noopener">GitHub →</a></div>
+    </div>
+    <div class="card">
+      <h3>ClassSchedule · 课表</h3>
+      <p>ThuSchedule 的前身：为吉大教务适配的课表应用，212+ 单元测试、备份恢复、深色模式一应俱全。</p>
+      <div class="meta"><span class="pill">Kotlin</span><span class="pill">Material 3</span><a href="https://github.com/starryecho-T/ClassSchedule" target="_blank" rel="noopener">GitHub →</a></div>
+    </div>
+    <div class="card">
+      <h3>本网站</h3>
+      <p>单文件手写页面：无框架、无构建、离线可用，也内置在 ThuSchedule 的「主页」Tab 里。</p>
+      <div class="meta"><span class="pill">HTML</span><span class="pill">CSS</span><span class="pill">零依赖</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>技能</h2>
+    <!-- EDIT：调整技能标签 -->
+    <div class="skills">
+      <span class="pill">Kotlin</span>
+      <span class="pill">Android</span>
+      <span class="pill">Python</span>
+      <span class="pill">C / C++</span>
+      <span class="pill">Git</span>
+      <span class="pill">LaTeX</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>找到我</h2>
+    <div class="links">
+      <!-- EDIT：增删联系方式 -->
+      <a href="https://github.com/starryecho-T" target="_blank" rel="noopener">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+      <!-- EDIT：如果想放邮箱，把 user@example.com 换成你的邮箱
+      <a href="mailto:user@example.com">✉️ 邮箱</a> -->
+    </div>
+  </section>
+
+  <footer>
+    © 2026 starryecho · 手写 HTML，无框架无构建 ·
+    <a href="https://github.com/starryecho-T" target="_blank" rel="noopener">GitHub</a>
+  </footer>
+
+</div>
+</body>
+</html>

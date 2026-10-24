@@ -28,7 +28,7 @@ import com.thuschedule.app.R
  * 非 http(s) 链接（如 mailto:）交给系统处理。Tab 采用 show/hide，
  * 视图在切换时存活，浏览状态自然保留。
  */
-class BbsFragment : Fragment(R.layout.fragment_bbs) {
+class BbsFragment : Fragment(R.layout.fragment_bbs), WebBackSupport {
 
     private var webView: WebView? = null
     private var progress: ProgressBar? = null
@@ -98,7 +98,7 @@ class BbsFragment : Fragment(R.layout.fragment_bbs) {
     }
 
     /** 返回键优先在网页历史内后退；无历史时返回 false 交给 Activity 切回课表。 */
-    fun handleBack(): Boolean = webView?.canGoBack()?.also { webView?.goBack() } == true
+    override fun handleBack(): Boolean = webView?.canGoBack()?.also { webView?.goBack() } == true
 
     private fun dispatchUrl(url: Uri) {
         val scheme = url.scheme?.lowercase()

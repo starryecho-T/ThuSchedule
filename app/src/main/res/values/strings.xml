@@ -88,4 +88,8 @@
     <string name="bbs_url">https://www.free-bbs.cn/</string>
     <string name="bbs_page_error">页面未能加载，请检查网络后重试</string>
     <string name="bbs_link_unsupported">没有应用可以打开此链接</string>
+
+    <!-- 个人主页 Tab -->
+    <string name="site_title">个人主页</string>
+    <string name="site_load_failed">个人主页加载失败，请重启应用重试</string>
 </resources>
