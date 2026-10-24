@@ -12,6 +12,7 @@ import android.webkit.CookieManager
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.ProgressBar
@@ -29,6 +30,7 @@ class SiteFragment : Fragment(R.layout.fragment_site), WebBackSupport {
     private var webView: WebView? = null
     private var progress: ProgressBar? = null
     private var newWindowWebView: WebView? = null
+    private var usedFallback = false
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -74,18 +76,28 @@ class SiteFragment : Fragment(R.layout.fragment_site), WebBackSupport {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                 if (request == null) return false
                 val url = request.url.toString()
+                if (request.url.scheme.equals("https", true) && request.url.host == LIVE_HOST) return false
                 if (request.url.scheme.equals("file", true)) return false
                 dispatchUrl(request.url)
                 return true
             }
 
+            // 优先加载公网站点（编辑后自动同步）；无网络/失败时回退到打包副本。
             override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
-                if (request?.isForMainFrame == true && isAdded) {
-                    Toast.makeText(requireContext(), R.string.site_load_failed, Toast.LENGTH_LONG).show()
-                }
+                if (request?.isForMainFrame == true) failToBundled()
+            }
+
+            override fun onReceivedHttpError(view: WebView?, request: WebResourceRequest?, response: WebResourceResponse?) {
+                if (request?.isForMainFrame == true) failToBundled()
             }
         }
-        web.loadUrl("file:///android_asset/site/index.html")
+        web.loadUrl(LIVE_URL)
+    }
+
+    private fun failToBundled() {
+        if (usedFallback) return
+        usedFallback = true
+        webView?.loadUrl("file:///android_asset/site/index.html")
     }
 
     override fun handleBack(): Boolean = webView?.canGoBack()?.also { webView?.goBack() } == true
@@ -101,6 +113,12 @@ class SiteFragment : Fragment(R.layout.fragment_site), WebBackSupport {
 
     override fun onResume() { super.onResume(); webView?.onResume() }
     override fun onPause() { webView?.onPause(); super.onPause() }
+
+    companion object {
+        /** 公网站点（GitHub Pages）：编辑器保存后约 1 分钟自动更新。 */
+        const val LIVE_URL = "https://starryecho-t.github.io/"
+        const val LIVE_HOST = "starryecho-t.github.io"
+    }
 
     override fun onDestroyView() {
         (webView?.parent as? ViewGroup)?.removeView(webView)

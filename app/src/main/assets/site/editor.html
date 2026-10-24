@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<!-- 在线编辑器：表单修改 content.js 并通过 GitHub API 直接提交到仓库，
+     GitHub Pages 约一分钟自动重新发布。令牌只保存在本浏览器 localStorage。 -->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>编辑 · 个人主页</title>
+<style>
+  :root {
+    --brand: #6750a4; --brand-soft: #ece6f7; --bg: #faf8fd; --card: #fff;
+    --text: #1d1b20; --muted: #5b5763; --line: #e6e1ef; --danger: #b3261e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --brand: #cfbcff; --brand-soft: #2b2540; --bg: #141218; --card: #211f26;
+      --text: #e6e1e9; --muted: #a9a3b2; --line: #36343d; --danger: #f2b8b5; }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "HarmonyOS Sans SC", -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.6; padding-bottom: 60px;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 20px; }
+  h1 { font-size: 22px; padding: 8px 0 4px; }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+  .sub a { color: var(--brand); }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+  label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+  input[type=text], input[type=password], textarea {
+    width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px;
+    background: var(--bg); color: var(--text); font: inherit; font-size: 14px;
+  }
+  textarea { min-height: 84px; resize: vertical; }
+  input:focus, textarea:focus { outline: 2px solid var(--brand); border-color: transparent; }
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+  button {
+    border: none; border-radius: 10px; padding: 10px 16px; font: inherit; font-size: 14px;
+    background: var(--brand-soft); color: var(--brand); cursor: pointer;
+  }
+  button.primary { background: var(--brand); color: var(--bg); font-weight: 600; }
+  button.ghost { background: transparent; border: 1px solid var(--line); color: var(--muted); }
+  button.danger { color: var(--danger); background: transparent; }
+  .proj { border-top: 1px dashed var(--line); margin-top: 12px; padding-top: 4px; }
+  .proj-head { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+  .status { padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-top: 14px; display: none; }
+  .status.ok { display: block; background: var(--brand-soft); color: var(--brand); }
+  .status.err { display: block; background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+  .tokenhint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .tokenhint a { color: var(--brand); }
+  .actions { position: fixed; bottom: 0; left: 0; right: 0; padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+    background: var(--bg); border-top: 1px solid var(--line); display: flex; gap: 10px; }
+  .actions button { flex: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>✏️ 编辑个人主页</h1>
+  <p class="sub">保存后自动提交到 GitHub 仓库，<a href="index.html">站点</a>约 1 分钟内更新。GitHub 链接：
+    <a href="https://github.com/starryecho-T/starryecho-T.github.io/blob/main/content.js" target="_blank" rel="noopener">content.js</a></p>
+
+  <div class="panel">
+    <label>GitHub 令牌（细粒度 PAT，仅需本仓库 Contents 读写权限）</label>
+    <div class="row">
+      <input type="password" id="token" placeholder="github_pat_…（只存本设备）" autocomplete="off">
+      <button id="forget" class="ghost" style="flex:0 0 auto">清除</button>
+    </div>
+    <p class="tokenhint">
+      创建入口：<a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Settings → Personal access tokens → Fine-grained</a>
+      （Repository access 选 Only select → 本仓库；Permissions → Contents → Read and write）。令牌仅保存在本设备浏览器里，用于以你的身份提交。
+    </p>
+  </div>
+
+  <div class="panel">
+    <label>名字 / 昵称</label>
+    <input type="text" id="name">
+    <label>一句话介绍</label>
+    <input type="text" id="tagline">
+    <label>关于我（每行一段）</label>
+    <textarea id="about"></textarea>
+    <label>技能（用逗号分隔）</label>
+    <input type="text" id="skills">
+    <label>页脚</label>
+    <input type="text" id="footer">
+  </div>
+
+  <div class="panel">
+    <div class="proj-head"><label style="margin:0">项目卡片</label><button id="addProj">＋ 添加项目</button></div>
+    <div id="projects"></div>
+  </div>
+
+  <div class="panel">
+    <div class="proj-head"><label style="margin:0">联系方式</label><button id="addLink">＋ 添加链接</button></div>
+    <div id="links"></div>
+  </div>
+
+  <div class="status" id="status"></div>
+</div>
+
+<div class="actions">
+  <button class="ghost" onclick="location.href='index.html'">← 返回主页</button>
+  <button class="primary" id="save">保存并发布</button>
+</div>
+
+<script>
+const OWNER = 'starryecho-T';
+const REPO = 'starryecho-T.github.io';
+const $ = (id) => document.getElementById(id);
+</script>
+<script src="content.js"></script>
+<script>
+let content = null;
+
+function esc(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// ---- 加载当前内容：仓库最新 → 失败则用本地 content.js ----
+async function loadContent() {
+  try {
+    const res = await fetch('https://raw.githubusercontent.com/' + OWNER + '/' + REPO + '/main/content.js?t=' + Date.now());
+    if (res.ok) {
+      const text = await res.text();
+      const fn = new Function(text + '\nreturn window.SITE_CONTENT;');
+      const parsed = fn();
+      if (parsed && parsed.name !== undefined) { content = parsed; return '已从仓库载入最新内容'; }
+    }
+  } catch (e) { /* 离线等情况 */ }
+  content = JSON.parse(JSON.stringify(window.SITE_CONTENT || { name: '', projects: [], links: [] }));
+  return '未连到仓库，已载入内置默认内容（保存需要网络与令牌）';
+}
+
+// ---- 表单绑定 ----
+function fillForm() {
+  $('name').value = content.name || '';
+  $('tagline').value = content.tagline || '';
+  $('about').value = (content.about || []).join('\n');
+  $('skills').value = (content.skills || []).join('，');
+  $('footer').value = content.footer || '';
+  renderProjects(); renderLinks();
+}
+
+function renderProjects() {
+  const box = $('projects'); box.innerHTML = '';
+  (content.projects || []).forEach((p, i) => {
+    const div = document.createElement('div'); div.className = 'proj';
+    div.innerHTML =
+      '<label>项目名</label><input type="text" data-f="name" data-i="' + i + '">' +
+      '<label>描述</label><textarea data-f="description" data-i="' + i + '"></textarea>' +
+      '<label>标签（逗号分隔）</label><input type="text" data-f="tags" data-i="' + i + '">' +
+      '<label>链接（可空）</label><input type="text" data-f="link" data-i="' + i + '">';
+    box.appendChild(div);
+    const head = document.createElement('div'); head.className = 'proj-head';
+    head.innerHTML = '<span style="font-size:12px;color:var(--muted)">第 ' + (i + 1) + ' 个</span>';
+    const del = document.createElement('button'); del.className = 'danger'; del.textContent = '删除';
+    del.onclick = () => { content.projects.splice(i, 1); renderProjects(); };
+    head.appendChild(del); div.prepend(head);
+    div.querySelector('[data-f=name]').value = p.name || '';
+    div.querySelector('[data-f=description]').value = p.description || '';
+    div.querySelector('[data-f=tags]').value = (p.tags || []).join('，');
+    div.querySelector('[data-f=link]').value = p.link || '';
+  });
+}
+function renderLinks() {
+  const box = $('links'); box.innerHTML = '';
+  (content.links || []).forEach((l, i) => {
+    const div = document.createElement('div'); div.className = 'row'; div.style.marginTop = '8px';
+    div.innerHTML = '<input type="text" data-f="label" data-i="' + i + '" placeholder="名称">' +
+                    '<input type="text" data-f="url" data-i="' + i + '" placeholder="https://…">';
+    box.appendChild(div);
+    const del = document.createElement('button'); del.className = 'danger'; del.textContent = '删';
+    del.style.flex = '0 0 auto';
+    del.onclick = () => { content.links.splice(i, 1); renderLinks(); };
+    div.appendChild(del);
+    div.querySelector('[data-f=label]').value = l.label || '';
+    div.querySelector('[data-f=url]').value = l.url || '';
+  });
+}
+
+// 动态行的输入实时写回 content
+document.addEventListener('input', (e) => {
+  const f = e.target.dataset && e.target.dataset.f;
+  if (!f) return;
+  const i = Number(e.target.dataset.i);
+  if (e.target.closest('#projects')) {
+    if (f === 'tags') content.projects[i].tags = e.target.value.split(/[,，]/).map(s => s.trim()).filter(Boolean);
+    else content.projects[i][f] = e.target.value;
+  } else if (e.target.closest('#links')) {
+    content.links[i][f] = e.target.value;
+  }
+});
+
+$('addProj').onclick = () => { content.projects.push({ name: '', description: '', tags: [], link: '' }); renderProjects(); };
+$('addLink').onclick = () => { content.links.push({ label: '', url: '' }); renderLinks(); };
+
+// ---- 令牌 ----
+$('token').value = localStorage.getItem('gh_token_' + REPO) || '';
+$('forget').onclick = () => { localStorage.removeItem('gh_token_' + REPO); $('token').value = ''; setStatus('已清除本机保存的令牌', 'ok'); };
+
+function serialize() {
+  return '// 个人网站内容数据 —— 由网页编辑器生成，也可手动编辑。\n' +
+    'window.SITE_CONTENT = ' + JSON.stringify(content, null, 2) + ';\n';
+}
+function b64(s) { return btoa(unescape(encodeURIComponent(s))); }
+function setStatus(text, kind) { const el = $('status'); el.textContent = text; el.className = 'status ' + kind; }
+
+// ---- 保存：GET sha → PUT contents ----
+$('save').onclick = async () => {
+  // 把静态输入框收回到 content
+  content.name = $('name').value.trim();
+  content.tagline = $('tagline').value.trim();
+  content.about = $('about').value.split('\n').map(s => s.trim()).filter(Boolean);
+  content.skills = $('skills').value.split(/[,，]/).map(s => s.trim()).filter(Boolean);
+  content.footer = $('footer').value.trim();
+
+  const token = $('token').value.trim();
+  if (!token) { setStatus('缺少 GitHub 令牌：按上方说明创建并粘贴后即可保存。', 'err'); return; }
+  localStorage.setItem('gh_token_' + REPO, token);
+  $('save').disabled = true; setStatus('正在提交到 GitHub…', 'ok');
+  try {
+    const headers = { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' };
+    let sha = null;
+    const meta = await fetch('https://api.github.com/repos/' + OWNER + '/' + REPO + '/contents/content.js', { headers });
+    if (meta.ok) sha = (await meta.json()).sha;
+    else if (meta.status !== 404) throw new Error('读取仓库失败：HTTP ' + meta.status + '（检查令牌权限）');
+    const put = await fetch('https://api.github.com/repos/' + OWNER + '/' + REPO + '/contents/content.js', {
+      method: 'PUT', headers: headers,
+      body: JSON.stringify({ message: 'update site content from web editor', content: b64(serialize()), sha: sha }),
+    });
+    if (!put.ok) {
+      const err = await put.json().catch(() => ({}));
+      throw new Error('提交失败：HTTP ' + put.status + ' ' + (err.message || ''));
+    }
+    setStatus('✅ 已提交！GitHub Pages 正在重新发布，约 1 分钟后到「主页」刷新即可看到。', 'ok');
+  } catch (e) {
+    setStatus('❌ ' + e.message, 'err');
+  } finally {
+    $('save').disabled = false;
+  }
+};
+
+(async () => { setStatus(await loadContent(), 'ok'); fillForm(); })();
+</script>
+</body>
+</html>
