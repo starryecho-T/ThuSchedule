@@ -4,6 +4,7 @@
 //   2. 在 GitHub 网页上直接编辑本文件（仓库页面点铅笔，或按 . 打开网页版 VS Code）
 //   3. GitHub 手机 App 里编辑文件
 window.SITE_CONTENT = {
+  avatar: "",
   name: "starryecho",
   tagline: "清华大学 · 工科新生 · Android 开发爱好者",
   about: [

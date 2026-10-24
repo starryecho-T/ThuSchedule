@@ -72,6 +72,18 @@
   </div>
 
   <div class="panel">
+    <label>头像（可选；不设置则显示名字首字母。选图后自动裁成方形缩到 256px）</label>
+    <div style="display:flex;align-items:center;gap:14px">
+      <img id="avatarPreview" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:1px solid var(--line);display:none" alt="头像预览">
+      <div>
+        <button id="pickAvatar" type="button">选择图片</button>
+        <button id="clearAvatar" type="button" class="ghost">清除</button>
+      </div>
+    </div>
+    <input type="file" id="avatarFile" accept="image/*" style="display:none">
+  </div>
+
+  <div class="panel">
     <label>名字 / 昵称</label>
     <input type="text" id="name">
     <label>一句话介绍</label>
@@ -113,19 +125,31 @@ let content = null;
 
 function esc(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-// ---- 加载当前内容：仓库最新 → 失败则用本地 content.js ----
+// ---- 加载当前内容：同源（本站部署的最新版）→ 页面自带副本 ----
+// 不用 raw.githubusercontent.com：该域在国内常被墙且表现为无限挂起；
+// 本站（github.io）在手机上可达，且 Pages 部署的内容就是仓库最新版。
 async function loadContent() {
   try {
-    const res = await fetch('https://raw.githubusercontent.com/' + OWNER + '/' + REPO + '/main/content.js?t=' + Date.now());
-    if (res.ok) {
-      const text = await res.text();
-      const fn = new Function(text + '\nreturn window.SITE_CONTENT;');
-      const parsed = fn();
-      if (parsed && parsed.name !== undefined) { content = parsed; return '已从仓库载入最新内容'; }
-    }
-  } catch (e) { /* 离线等情况 */ }
-  content = JSON.parse(JSON.stringify(window.SITE_CONTENT || { name: '', projects: [], links: [] }));
-  return '未连到仓库，已载入内置默认内容（保存需要网络与令牌）';
+    const text = await fetchWithTimeout('content.js?t=' + Date.now(), 5000);
+    const parsed = new Function(text + '\nreturn window.SITE_CONTENT;')();
+    if (parsed && typeof parsed === 'object') { content = parsed; return '已载入线上最新内容'; }
+  } catch (e) { /* 超时或网络失败，走回退 */ }
+  if (window.SITE_CONTENT && typeof window.SITE_CONTENT === 'object') {
+    content = JSON.parse(JSON.stringify(window.SITE_CONTENT));
+    return '线上拉取超时，已载入本页附带的内容副本（保存前请确认字段完整）';
+  }
+  content = { name: '', tagline: '', about: [], projects: [], skills: [], links: [], footer: '', avatar: '' };
+  return '❌ 内容加载失败。请刷新重试——加载失败时保存会用空内容覆盖线上，已禁止保存。';
+}
+
+function fetchWithTimeout(url, ms) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  return fetch(url, { signal: controller.signal }).then(r => {
+    clearTimeout(timer);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.text();
+  });
 }
 
 // ---- 表单绑定 ----
@@ -135,8 +159,41 @@ function fillForm() {
   $('about').value = (content.about || []).join('\n');
   $('skills').value = (content.skills || []).join('，');
   $('footer').value = content.footer || '';
+  renderAvatar();
   renderProjects(); renderLinks();
 }
+
+// ---- 头像 ----
+function renderAvatar() {
+  const img = $('avatarPreview');
+  if (content.avatar) { img.src = content.avatar; img.style.display = ''; }
+  else { img.removeAttribute('src'); img.style.display = 'none'; }
+}
+$('pickAvatar').onclick = () => $('avatarFile').click();
+$('clearAvatar').onclick = () => { content.avatar = ''; renderAvatar(); };
+$('avatarFile').onchange = (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const image = new Image();
+    image.onload = () => {
+      const size = 256;
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      const side = Math.min(image.width, image.height);
+      const ctx = canvas.getContext('2d');
+      // 居中裁成方形后缩放，避免非方形图变形
+      ctx.drawImage(image, (image.width - side) / 2, (image.height - side) / 2, side, side, 0, 0, size, size);
+      content.avatar = canvas.toDataURL('image/jpeg', 0.88);
+      renderAvatar();
+      setStatus('头像已选择，点「保存并发布」后生效', 'ok');
+    };
+    image.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+};
 
 function renderProjects() {
   const box = $('projects'); box.innerHTML = '';
@@ -196,6 +253,7 @@ $('token').value = localStorage.getItem('gh_token_' + REPO) || '';
 $('forget').onclick = () => { localStorage.removeItem('gh_token_' + REPO); $('token').value = ''; setStatus('已清除本机保存的令牌', 'ok'); };
 
 function serialize() {
+  content.avatar = content.avatar || '';
   return '// 个人网站内容数据 —— 由网页编辑器生成，也可手动编辑。\n' +
     'window.SITE_CONTENT = ' + JSON.stringify(content, null, 2) + ';\n';
 }
@@ -212,6 +270,10 @@ $('save').onclick = async () => {
   content.footer = $('footer').value.trim();
 
   const token = $('token').value.trim();
+  if (!content.name.trim()) {
+    setStatus('名字为空——内容可能没有加载成功。请刷新页面载入后再保存，否则会用空内容覆盖线上。', 'err');
+    return;
+  }
   if (!token) { setStatus('缺少 GitHub 令牌：按上方说明创建并粘贴后即可保存。', 'err'); return; }
   localStorage.setItem('gh_token_' + REPO, token);
   $('save').disabled = true; setStatus('正在提交到 GitHub…', 'ok');

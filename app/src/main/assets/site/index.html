@@ -129,8 +129,12 @@
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
       });
     };
-    var initial = esc((content.name || '?').trim().charAt(0).toUpperCase());
-    document.getElementById('avatar').textContent = initial;
+    var avatarEl = document.getElementById('avatar');
+    if (content.avatar) {
+      avatarEl.innerHTML = '<img src="' + esc(content.avatar) + '" style="width:96px;height:96px;border-radius:50%;object-fit:cover" alt="头像">';
+    } else {
+      avatarEl.textContent = esc((content.name || '?').trim().charAt(0).toUpperCase());
+    }
     document.title = (content.name || '') + ' · 个人主页';
     document.getElementById('name').textContent = content.name || '';
     var tagline = esc(content.tagline || '');
