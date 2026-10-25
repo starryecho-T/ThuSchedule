@@ -28,8 +28,8 @@
 
 ## 📌 已知状态与限制
 
-- **教务导入**：可在应用内登录 `info.tsinghua.edu.cn` 或学校 WebVPN 并导出页面快照；「一键识别」的解析规则沿用吉大教务页面结构，对清华页面大概率提示「未识别」并保存快照——这正是我们需要的反馈材料（注意快照含个人信息，分享前请检查）。
-- **更新检查**：当前指向占位仓库 `starryecho-T/ThuSchedule`，正式发布前请替换为自己的仓库地址（`update/UpdateCheckLauncher.kt`）。
+- **教务导入**：可在应用内登录 `info.tsinghua.edu.cn` 或学校 WebVPN 并导出页面快照；「一键识别」走 INFO 教学日历接口，实验/调课等未安排时间的课程需排课后重新识别追加。
+- **更新检查**：指向本仓库 `starryecho-T/ThuSchedule` 的 GitHub Releases；未发布 Release 时提示已是最新版本。
 - **备份格式**：`thuschedule-backup` version=1，与 ClassSchedule 的备份互不通用（学期配置不同，恢复会被拒绝，属预期行为）。
 - 作息时间与校历集中在 `app/src/main/java/com/thuschedule/app/data/` 下的 `ThuTimeTable.kt` 与 `TermCalendar.kt`，与实际不符时直接修改即可，界面与周次自动重算。
 
@@ -51,7 +51,7 @@
 - Android SDK Platform 35
 
 ```bash
-git clone <本仓库地址>
+git clone https://github.com/starryecho-T/ThuSchedule.git
 cd ThuSchedule
 export JAVA_HOME=/path/to/jdk-17   # Windows Git Bash
 ./gradlew :app:testDebugUnitTest :app:assembleDebug
